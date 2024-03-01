@@ -1,0 +1,64 @@
+import { GetServerSideProps } from "next";
+import qs from "querystring";
+
+
+interface PropertiesProps {
+  postData: {
+    a: string;
+    b: string;
+  };c
+}
+
+export const getServerSideProps: GetServerSideProps<PropertiesProps> = async (
+  context
+) => {
+  const { req, query } = context;
+
+  let postData = { a: "none", b: "none" };
+
+  if (req.method === "POST") {
+    const streamPromise = new Promise((resolve, reject) => {
+      let postBody = "";
+
+      req.on("data", (data) => {
+        // convert Buffer to string
+        postBody += data.toString();
+      });
+
+      req.on("end", () => {
+        const postData = qs.parse(postBody);
+        resolve(postData);
+      });
+    });
+
+    try {
+      const { a, b } = await streamPromise as {a?: string, b?: string};
+      postData.a = a || "none";
+      postData.b = b || "none";
+    } catch (error) {}
+    // postData = 
+  } 
+  if(req.method === "GET") {
+    const { a, b } = query as { a?: string; b?: string };
+     postData.a = a || "none";
+     postData.b = b || "none"; 
+  }
+
+  return {
+    props: {
+      postData,
+    },
+  };
+};
+
+const Properties: React.FC<PropertiesProps> = ({ postData }) => {
+  return (
+    <div>
+      <h1>Properties Page</h1>
+      <p>a: {postData.a}</p>
+      <p>b: {postData.b}</p>
+    </div>
+  );
+};
+
+export default Properties;
